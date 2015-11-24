@@ -33,12 +33,12 @@ uint8_t colIndex = 0;
 
 void setup()
 {
-  // Open the serial connection.
-  tft.begin(9600);
+  // Open the serial connection to the display.
+  tft.begin();
   
-  // Give the display some time to start up and reset.
-  tft.reset();
-  delay(1000);
+  // The display seems to need as much as 4 seconds to be fully online
+  //  and ready to receive commands.
+  delay(4000);
   
   // General setup.
   tft.setBackgroundColour(HSTColour::Black, true);
@@ -52,6 +52,7 @@ void setup()
   tft.drawFilledBox(55, 41, 105, 61);
   tft.setForegroundColour(HSTColour::Red);
   tft.drawFilledBox(73, 61, 87, 77);
+  tft.flush();
 }
 
 void loop()
