@@ -5,7 +5,7 @@
 # HobbytronicsSerialTFT Arduino library
 This is an Arduino library for controlling the 1.8 inch serial TFT display produced by Hobbytronics.
 
-Note that this library (and its author) are ''not affiliated'' with Hobbytronics in any way.
+Note that this library (and its author) are *not affiliated* with Hobbytronics in any way.
 
 The display can be purchased from here:
 
