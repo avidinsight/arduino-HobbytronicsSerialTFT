@@ -1,0 +1,48 @@
+HobbytronicsSerialTFT	KEYWORD1
+HSTColour	KEYWORD1
+HSTColor	KEYWORD1
+HSTRotation	KEYWORD1
+HSTFontSize	KEYWORD1
+
+reset	KEYWORD2
+begin	KEYWORD2
+clearScreen	KEYWORD2
+setForegroundColour	KEYWORD2
+setForegroundColor	KEYWORD2
+setBackgroundColour	KEYWORD2
+setBackgroundColor	KEYWORD2
+setScreenRotation	KEYWORD2
+setFontSize	KEYWORD2
+gotoTextLineStart	KEYWORD2
+gotoCharacterPosition	KEYWORD2
+gotoPixelPosition	KEYWORD2
+drawLine	KEYWORD2
+drawBox	KEYWORD2
+drawFilledBox	KEYWORD2
+drawCircle	KEYWORD2
+drawFilledCircle	KEYWORD2
+drawBitmap	KEYWORD2
+setBacklightBrightness	KEYWORD2
+drawPixel	KEYWORD2
+drawHorizontalLine	KEYWORD2
+drawVerticalLine	KEYWORD2
+write	KEYWORD2
+
+Black	LITERAL1
+Blue	LITERAL1
+Red	LITERAL1
+Green	LITERAL1
+Cyan	LITERAL1
+Magenta	LITERAL1
+Yellow	LITERAL1
+White	LITERAL1
+
+PortraitInverted	LITERAL1
+LandscapeInverted	LITERAL1
+Portrait	LITERAL1
+Landscape	LITERAL1
+
+Small	LITERAL1
+Medium	LITERAL1
+Large	LITERAL1
+
