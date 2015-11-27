@@ -259,11 +259,15 @@ public:
 
     /// Draw a horizontal line across the whole width of the display at the specified y position.
     void drawHorizontalLine(uint8_t y);
+    
+    /// Draw a horizontal line from x1,y to x2,y.
+    void drawHorizontalLine(uint8_t x1, uint8_t y, uint8_t x2);
 
     /// Draw a vertical line across the whole height of the display at the specified x position.
     void drawVerticalLine(uint8_t x);
-
-    // TODO: draw/fill triangle
+    
+    /// Draw a vertical line from x,y1 to x,y2.
+    void drawVerticalLine(uint8_t x, uint8_t y1, uint8_t y2);
 
 
     //------------------------------------------------------------------------------

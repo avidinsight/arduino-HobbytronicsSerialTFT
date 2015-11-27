@@ -215,9 +215,19 @@ void HobbytronicsSerialTFT::drawHorizontalLine(uint8_t y)
     drawLine(0, y, 159, y);
 }
 
+void HobbytronicsSerialTFT::drawHorizontalLine(uint8_t x1, uint8_t y, uint8_t x2)
+{
+    drawLine(x1, y, x2, y);
+}
+
 void HobbytronicsSerialTFT::drawVerticalLine(uint8_t x)
 {
     drawLine(x, 0, x, 159);
+}
+
+void HobbytronicsSerialTFT::drawVerticalLine(uint8_t x, uint8_t y1, uint8_t y2)
+{
+    drawLine(x, y1, x, y2);
 }
 
 
