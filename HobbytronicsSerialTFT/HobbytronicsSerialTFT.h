@@ -49,9 +49,18 @@ enum class HSTRotation : uint8_t
 enum class HSTFontSize : uint8_t
 {
     Small = 1, // Screen size in whole characters: 26x16 (landscape), 21x20 (portrait)
-    Medium,    // Screen size in whole characters: 13x8    (landscape), 10x10 (portrait)
-    Large      // Screen size in whole characters:    8x5    (landscape),    7x6    (portrait)
+    Medium,    // Screen size in whole characters: 13x8  (landscape), 10x10 (portrait)
+    Large      // Screen size in whole characters:  8x5  (landscape),  7x6  (portrait)
 };
+
+// Enumeration of drawing styles for shapes.
+enum class HSTShapeStyle : uint8_t
+{
+    Outline,        // Outline only, using outline colour.
+    Fill,           // Fill only, using fill colour.
+    FilledOutline   // Outline and fill, using their respective colours.
+};
+
 
 // This class constructs and sends commands to control the Hobbytronics Serial TFT 1.8 inch display.
 // Note that this derives from Print, so text can be sent to the display using the usual text
@@ -119,6 +128,7 @@ public:
     // Destructor.
     ~HobbytronicsSerialTFT();
 
+    
     //------------------------------------------------------------------------------
     // Disallowed operations.
 
@@ -158,36 +168,101 @@ public:
     
 
     //------------------------------------------------------------------------------
-    // Core commands.
-    // These functions map directly onto the display's firmware functionality.
-
-    // Clear the screen.
-    void clearScreen();
-
-    // Set the colour which is used for text and drawing.
-    // Example usage: setForegroundColour(HSTColour::Blue)
-    void setForegroundColour(const HSTColour col);
-
-    // Set the color which is used for text and drawing.
-    // Example usage: setForegroundColor(HSTColor::Blue)
-    // This is really just an alias of setForegroundColour for people who prefer American spelling. :)
-    void setForegroundColor(const HSTColor col) { setForegroundColour(col); }
-
-    // Set the colour of the background.
-    // If clear is true then the screen is immediately cleared to this colour too.
-    // Example usage: setBackgroundColour(HSTColour::Black, true)
-    void setBackgroundColour(const HSTColour col, const bool clear);
-
-    // Set the color of the background.
-    // If clear is true then the screen is immediately cleared to this colour too.
-    // Example usage: setBackgroundColor(HSTColor::Black, true)
-    // This is really just an alias of setBackgroundColor for people who prefer American spelling. :)
-    void setBackgroundColor(const HSTColor col, const bool clear) { setBackgroundColour(col, clear); }
-
-    /// Set the orientation of the screen.
+    // Colour functions.
+    
+    /// Set the background colour which will be used in subsequent drawing.
+    /// It is used when clearing the screen, and as the background for text.
+    /// This doesn't send the colour to the display until it's needed.
+    void setBackgroundColour(const HSTColour col);
+    
+    /// Same as setBackgroundColor(), but with American spelling.
+    void setBackgroundColor(const HSTColor col) { setBackgroundColour(col); }
+    
+    
+    /// Set the colour which will be used in line drawing and text.
+    /// This doesn't send the colour to the display until it's needed.
+    void setLineColour(const HSTColour col);
+    
+    /// Same as setLineColour(), but with American spelling.
+    void setLineColor(const HSTColor col) { setLineColour(col); }
+    
+    
+    /// Set the colour which will be used for filling shapes.
+    /// This doesn't send the colour to the display until it's needed.
+    void setFillColour(const HSTColour col);
+    
+    /// Same as setFillColour() but with American spelling.
+    void setFillColor(const HSTColor col) { setFillColour(col); }
+    
+    
+    //------------------------------------------------------------------------------
+    // General display functions.
+    
+    /// Set the orientation of the screen for subsequent drawing operations.
+    /// This doesn't affect the content currently on the screen.
     /// Example usage: setScreenRotation(HSTRotation::Portrait)
     void setScreenRotation(const HSTRotation rtn);
+    
+    /// Set the brightness of the display's backlight.
+    /// Range is 0 (off) to 100 (maximum).
+    void setBacklightBrightness(uint8_t level);
 
+    // Clear the screen.
+    // This uses the currently set background colour. Default is black.
+    void clearScreen();
+    
+    /// Draw a bitmap file at the specified coordinates.
+    /// The bitmap is read from a micro SD card inserted into the display's slot.
+    /// Example usage: drawBitmap(10, 13, "logo.bmp")
+    void drawBitmap(uint8_t x, uint8_t y, String filename);
+    
+    
+    //------------------------------------------------------------------------------
+    // Shape drawing functions.
+    
+    /// Draw a pixel at the specified location.
+    /// Screen dimensions are 160x128 pixels (landscape), or 128x160 (portrait).
+    /// This draws using the current foreground colour.
+    /// Caution: Drawing pixels one-at-a-time is slow!
+    /// Example usage: drawPixel(64, 89)
+    void drawPixel(uint8_t x, uint8_t y);
+    
+    /// Draw a horizontal line across the whole width of the display at the specified y position.
+    void drawHorizontalLine(uint8_t y);
+    
+    /// Draw a horizontal line from x1,y to x2,y.
+    void drawHorizontalLine(uint8_t x1, uint8_t y, uint8_t x2);
+
+    /// Draw a vertical line across the whole height of the display at the specified x position.
+    void drawVerticalLine(uint8_t x);
+    
+    /// Draw a vertical line from x,y1 to x,y2.
+    void drawVerticalLine(uint8_t x, uint8_t y1, uint8_t y2);
+
+    /// Draw a line from point x1,y1 to point x2,y2.
+    /// This draws using the current line colour.
+    /// Example usage: drawLine(12,0,100,90)
+    void drawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
+
+    /// Draw a box with one corner at point x1,y1 and the other at point x2,y2.
+    /// It is drawn using the current line and fill colours, as applicable.
+    /// Example usage: drawBox(51, 5, 72, 20, HSTShapeStyle::Fill)
+    void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, HSTShapeStyle style = HSTShapeStyle::Outline);
+
+    /// Draw a circle outline, with the centre at x,y and the specified radius.
+    /// It is drawn using the current line and fill colours, as applicable.
+    /// Example usage: drawCircle(79, 63, 40, HSTShapeStyle::Outline)
+    void drawCircle(uint8_t x, uint8_t y, uint8_t radius, HSTShapeStyle style = HSTShapeStyle::Outline);
+
+    /// Draw a triangle between the three given points. Order of points doesn't matter.
+    /// It is drawn using the current line and fill colours, as applicable.
+    /// Example usage: drawTriangle(5, 5, 5, 80, 80, 80, HSTShapeStyle::FilledOutline)
+    void drawTriangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x3, uint8_t y3, HSTShapeStyle style = HSTShapeStyle::Outline);
+
+
+    //------------------------------------------------------------------------------
+    // Text functions.
+    
     /// Set the font size for all subsequent text operations.
     /// Example usage: setFontSize(HSTFontSize::Small)
     void setFontSize(const HSTFontSize size);
@@ -201,80 +276,13 @@ public:
     void gotoCharacterPosition(uint8_t x, uint8_t y);
 
     /// Move the text cursor to the specified pixel position.
-    /// Screen dimensions are 159x127 pixels (landscape), or 127x159 (portrait).
+    /// Screen dimensions are 160x128 pixels (landscape), or 128x160 (portrait).
     /// Example usage: gotoPixelPosition(52, 27)
     void gotoPixelPosition(uint8_t x, uint8_t y);
 
-    /// Draw a line from point x1,y1 to point x2,y2 (specified in pixels).
-    /// Screen dimensions are 159x127 pixels (landscape), or 127x159 (portrait).
-    /// This draws using the current foreground colour.
-    /// Example usage: drawLine(12,0,100,90)
-    void drawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
-
-    /// Draw a box outline with one corner at point x1,y1 and the other at point x2,y2.
-    /// Screen dimensions are 159x127 pixels (landscape), or 127x159 (portrait).
-    /// This draws using the current foreground colour.
-    /// Example usage: drawBox(51,5,72,20)
-    void drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
-
-    /// Draw a filled box with one corner at point x1,y1 and the other at point x2,y2.
-    /// Screen dimensions are 159x127 pixels (landscape), or 127x159 (portrait).
-    /// This draws using the current foreground colour.
-    /// Example usage: drawFilledBox(51,5,72,20)
-    void drawFilledBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2);
-
-    /// Draw a circle outline, with the centre at x,y and the specified radius.
-    /// Screen dimensions are 159x127 pixels (landscape), or 127x159 (portrait).
-    /// This draws using the current foreground colour.
-    /// Example usage: drawCircle(79,63,40)
-    void drawCircle(uint8_t x, uint8_t y, uint8_t radius);
-
-    /// Draw a filled circle, with the centre at x,y and the specified radius.
-    /// Screen dimensions are 159x127 pixels (landscape), or 127x159 (portrait).
-    /// This draws using the current foreground colour.
-    /// Example usage: drawFilledCircle(79,63,40)
-    void drawFilledCircle(uint8_t x, uint8_t y, uint8_t radius);
-
-    /// Draw a bitmap file at the specified coordinates.
-    /// The bitmap is read from a micro SD card inserted into the display's slot.
-    /// Example usage: drawBitmap(10, 13, "logo.bmp")
-    void drawBitmap(uint8_t x, uint8_t y, String filename);
-
-    /// Set the brightness of the display's backlight.
-    /// Range is 0 (off) to 100 (maximum).
-    void setBacklightBrightness(uint8_t level);
-
-
-    //------------------------------------------------------------------------------
-    // Extended commands.
-    // These functions are provided for convenience. They don't add any new
-    //    functionality, but are wrappers around the core commands as used above.
-
-    /// Draw a pixel at the specified location.
-    /// Screen dimensions are 159x127 pixels (landscape), or 127x159 (portrait).
-    /// This draws using the current foreground colour.
-    /// Caution: Drawing pixels one-at-a-time is slow!
-    /// Example usage: drawPixel(64, 89)
-    void drawPixel(uint8_t x, uint8_t y);
-
-    /// Draw a horizontal line across the whole width of the display at the specified y position.
-    void drawHorizontalLine(uint8_t y);
-    
-    /// Draw a horizontal line from x1,y to x2,y.
-    void drawHorizontalLine(uint8_t x1, uint8_t y, uint8_t x2);
-
-    /// Draw a vertical line across the whole height of the display at the specified x position.
-    void drawVerticalLine(uint8_t x);
-    
-    /// Draw a vertical line from x,y1 to x,y2.
-    void drawVerticalLine(uint8_t x, uint8_t y1, uint8_t y2);
-
-
-    //------------------------------------------------------------------------------
-    // Text printing.
-
     // Write a single character to the display.
-    // This allows all the usual print() and println() commands to work.
+    // Note that you can call the print() and println() functions derived from the
+    //  Print class to draw strings and numbers.
     size_t write(uint8_t) override;
 
 
@@ -300,6 +308,26 @@ private:
 
     // Send a command with 4 parameter bytes.
     void sendCommand(uint8_t cmd, uint8_t par1, uint8_t par2, uint8_t par3, uint8_t par4);
+    
+    // Set the display's background colour to the specified value.
+    // This won't do anything if display already has the specified background colour.
+    void sendBackgroundColour(HSTColour col);
+    
+    // Set the display's foreground colour to the specified value.
+    // This won't do anything if display already has the specified foreground colour.
+    void sendForegroundColour(HSTColour col);
+    
+    // Update the display's background colour to match our stored background colour.
+    // This only sends the command if the colour has changed.
+    void applyBackgroundColour();
+    
+    // Update the display's foreground colour to match our stored line colour.
+    // This only sends the command if the colour has changed.
+    void applyLineColour();
+    
+    // Update the display's foreground colour to match our stored fill colour.
+    // This only sends the command if the colour has changed.
+    void applyFillColour();
     
     
     //------------------------------------------------------------------------------
@@ -335,6 +363,32 @@ private:
 
     // Indicates if a reset pin was provided at construction.
     bool m_hasResetPin;
+    
+    
+    // The background colour value most recently sent to the display.
+    // This is used to avoid sending it more often than necessary.
+    // It is initially set to an invalid colour value so that the first
+    //  colour used is always sent.
+    uint8_t m_lastBGCol;
+    
+    // The foreground colour value most recently sent to the display.
+    // This is used to avoid sending it more often than necessary.
+    // It is initially set to an invalid colour value so that the first
+    //  colour used is always sent.
+    uint8_t m_lastFGCol;
+    
+    
+    // The current colour for drawing lines and text.
+    // Default is white.
+    HSTColour m_colLine;
+    
+    // The current colour for filling shapes.
+    // Default is blue.
+    HSTColour m_colFill;
+    
+    // The current colour for clearing the screen and for text background.
+    // Default is black;
+    HSTColour m_colBackground;
 };
 
 #endif //Arduino_HobbytronicsSerialTFT_h

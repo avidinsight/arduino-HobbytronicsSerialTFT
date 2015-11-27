@@ -15,13 +15,11 @@
 #include "HobbytronicsSerialTFT.h"
 
 // The byte which signals the beginning of a command.
-const static uint8_t g_beginCmd = 0x1B;
+constexpr static uint8_t g_beginCmd = 0x1B;
 
 // The byte which signals the end of a command.
-const static uint8_t g_endCmd = 0xFF;
+constexpr static uint8_t g_endCmd = 0xFF;
 
-// The default speed of serial communication with the display.
-const static long g_serialSpeed = 9600;
 
 //------------------------------------------------------------------------------
 // Construction / destruction.
@@ -30,7 +28,12 @@ HobbytronicsSerialTFT::HobbytronicsSerialTFT(HardwareSerial &hwserial) :
     m_serialMode(SerialMode::Hardware),
     m_output(&hwserial),
     m_resetPin(0),
-    m_hasResetPin(false)
+    m_hasResetPin(false),
+    m_lastBGCol(255),
+    m_lastFGCol(255),
+    m_colLine(HSTColour::White),
+    m_colFill(HSTColour::Blue),
+    m_colBackground(HSTColour::Black)
 {
 }
 
@@ -44,7 +47,12 @@ HobbytronicsSerialTFT::HobbytronicsSerialTFT(SoftwareSerial &swserial) :
     m_serialMode(SerialMode::SoftwareExternal),
     m_output(&swserial),
     m_resetPin(0),
-    m_hasResetPin(false)
+    m_hasResetPin(false),
+    m_lastBGCol(255),
+    m_lastFGCol(255),
+    m_colLine(HSTColour::White),
+    m_colFill(HSTColour::Blue),
+    m_colBackground(HSTColour::Black)
 {
 }
 
@@ -58,7 +66,12 @@ HobbytronicsSerialTFT::HobbytronicsSerialTFT(uint8_t rx, uint8_t tx) :
     m_serialMode(SerialMode::SoftwareInternal),
     m_output(new SoftwareSerial(rx, tx)),
     m_resetPin(0),
-    m_hasResetPin(false)
+    m_hasResetPin(false),
+    m_lastBGCol(255),
+    m_lastFGCol(255),
+    m_colLine(HSTColour::White),
+    m_colFill(HSTColour::Blue),
+    m_colBackground(HSTColour::Black)
 {
 }
 
@@ -112,32 +125,128 @@ void HobbytronicsSerialTFT::flush()
     m_output->flush();
 }
 
+//------------------------------------------------------------------------------
+// Colour functions.
+
+void HobbytronicsSerialTFT::setBackgroundColour(const HSTColour col)
+{
+    m_colBackground = col;
+}
+
+void HobbytronicsSerialTFT::setLineColour(const HSTColour col)
+{
+    m_colLine = col;
+}
+
+void HobbytronicsSerialTFT::setFillColour(const HSTColour col)
+{
+    m_colFill = col;
+}
+
 
 //------------------------------------------------------------------------------
-// Core commands.
-// These functions map directly onto the display's firmware functionality.
-
-void HobbytronicsSerialTFT::clearScreen()
-{
-    sendCommand(0);
-}
-
-void HobbytronicsSerialTFT::setForegroundColour(const HSTColour col)
-{
-    sendCommand(1, static_cast<uint8_t>(col));
-}
-
-void HobbytronicsSerialTFT::setBackgroundColour(const HSTColour col, const bool clear)
-{
-    sendCommand(2, static_cast<uint8_t>(col));
-    if (clear)
-        clearScreen();
-}
+// General display functions.
 
 void HobbytronicsSerialTFT::setScreenRotation(const HSTRotation rtn)
 {
     sendCommand(3, static_cast<uint8_t>(rtn));
 }
+
+void HobbytronicsSerialTFT::setBacklightBrightness(uint8_t level)
+{
+    sendCommand(14, level);
+}
+
+void HobbytronicsSerialTFT::clearScreen()
+{
+    
+    sendCommand(0);
+}
+
+void HobbytronicsSerialTFT::drawBitmap(uint8_t x, uint8_t y, String filename)
+{
+    m_output->write(g_beginCmd);
+    m_output->write(13);
+    m_output->write(x);
+    m_output->write(y);
+    m_output->print(filename);
+    m_output->write(g_endCmd);
+}
+
+
+//------------------------------------------------------------------------------
+// Shape drawing functions.
+
+void HobbytronicsSerialTFT::drawPixel(uint8_t x, uint8_t y)
+{
+    applyLineColour();
+    drawLine(x, y, x, y);
+}
+
+void HobbytronicsSerialTFT::drawHorizontalLine(uint8_t y)
+{
+    applyLineColour();
+    drawLine(0, y, 159, y);
+}
+
+void HobbytronicsSerialTFT::drawHorizontalLine(uint8_t x1, uint8_t y, uint8_t x2)
+{
+    applyLineColour();
+    drawLine(x1, y, x2, y);
+}
+
+void HobbytronicsSerialTFT::drawVerticalLine(uint8_t x)
+{
+    applyLineColour();
+    drawLine(x, 0, x, 159);
+}
+
+void HobbytronicsSerialTFT::drawVerticalLine(uint8_t x, uint8_t y1, uint8_t y2)
+{
+    applyLineColour();
+    drawLine(x, y1, x, y2);
+}
+
+void HobbytronicsSerialTFT::drawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
+{
+    applyLineColour();
+    sendCommand(8, x1, y1, x2, y2);
+}
+
+void HobbytronicsSerialTFT::drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, HSTShapeStyle style)
+{
+    if (style == HSTShapeStyle::Fill || style == HSTShapeStyle::FilledOutline) {
+        applyFillColour();
+        sendCommand(10, x1, y1, x2, y2);
+    }
+    
+    if (style == HSTShapeStyle::Outline || style == HSTShapeStyle::FilledOutline) {
+        applyLineColour();
+        sendCommand(9, x1, y1, x2, y2);
+    }
+}
+
+void HobbytronicsSerialTFT::drawCircle(uint8_t x, uint8_t y, uint8_t radius, HSTShapeStyle style)
+{
+    if (style == HSTShapeStyle::Fill || style == HSTShapeStyle::FilledOutline) {
+        applyFillColour();
+        sendCommand(12, x, y, radius);
+    }
+    
+    if (style == HSTShapeStyle::Outline || style == HSTShapeStyle::FilledOutline) {
+        applyLineColour();
+        sendCommand(11, x, y, radius);
+    }
+}
+
+void HobbytronicsSerialTFT::drawTriangle(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2, uint8_t x3, uint8_t y3, HSTShapeStyle style)
+{
+    // TODO: Implement
+}
+
+
+//------------------------------------------------------------------------------
+// Text functions.
 
 void HobbytronicsSerialTFT::setFontSize(const HSTFontSize size)
 {
@@ -159,83 +268,9 @@ void HobbytronicsSerialTFT::gotoPixelPosition(uint8_t x, uint8_t y)
     sendCommand(7, x, y);
 }
 
-void HobbytronicsSerialTFT::drawLine(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
-{
-    sendCommand(8, x1, y1, x2, y2);
-}
-
-void HobbytronicsSerialTFT::drawBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
-{
-    sendCommand(9, x1, y1, x2, y2);
-}
-
-void HobbytronicsSerialTFT::drawFilledBox(uint8_t x1, uint8_t y1, uint8_t x2, uint8_t y2)
-{
-    sendCommand(10, x1, y1, x2, y2);
-}
-
-void HobbytronicsSerialTFT::drawCircle(uint8_t x, uint8_t y, uint8_t radius)
-{
-    sendCommand(11, x, y, radius);
-}
-
-void HobbytronicsSerialTFT::drawFilledCircle(uint8_t x, uint8_t y, uint8_t radius)
-{
-    sendCommand(12, x, y, radius);
-}
-
-void HobbytronicsSerialTFT::drawBitmap(uint8_t x, uint8_t y, String filename)
-{
-    m_output->write(g_beginCmd);
-    m_output->write(13);
-    m_output->write(x);
-    m_output->write(y);
-    m_output->print(filename);
-    m_output->write(g_endCmd);
-}
-
-void HobbytronicsSerialTFT::setBacklightBrightness(uint8_t level)
-{
-    sendCommand(14, level);
-}
-
-
-//------------------------------------------------------------------------------
-// Extended commands.
-// These functions are provided for convenience. They don't add any new
-    //    functionality, but are wrappers around the core commands as used above.
-
-void HobbytronicsSerialTFT::drawPixel(uint8_t x, uint8_t y)
-{
-    drawLine(x, y, x, y);
-}
-
-void HobbytronicsSerialTFT::drawHorizontalLine(uint8_t y)
-{
-    drawLine(0, y, 159, y);
-}
-
-void HobbytronicsSerialTFT::drawHorizontalLine(uint8_t x1, uint8_t y, uint8_t x2)
-{
-    drawLine(x1, y, x2, y);
-}
-
-void HobbytronicsSerialTFT::drawVerticalLine(uint8_t x)
-{
-    drawLine(x, 0, x, 159);
-}
-
-void HobbytronicsSerialTFT::drawVerticalLine(uint8_t x, uint8_t y1, uint8_t y2)
-{
-    drawLine(x, y1, x, y2);
-}
-
-
-//------------------------------------------------------------------------------
-// Text printing.
-
 size_t HobbytronicsSerialTFT::write(uint8_t data)
 {
+    applyLineColour();
     m_output->write(data);
 }
 
@@ -297,5 +332,34 @@ void HobbytronicsSerialTFT::sendCommand(uint8_t cmd, uint8_t par1, uint8_t par2,
     m_output->write(g_endCmd);
 }
 
+void HobbytronicsSerialTFT::sendBackgroundColour(HSTColour col)
+{
+    if (m_lastBGCol != static_cast<uint8_t>(col)) {
+        m_lastBGCol = static_cast<uint8_t>(col);
+        sendCommand(2, m_lastBGCol);
+    }
+}
+    
+void HobbytronicsSerialTFT::sendForegroundColour(HSTColour col)
+{
+    if (m_lastFGCol != static_cast<uint8_t>(col)) {
+        m_lastFGCol = static_cast<uint8_t>(col);
+        sendCommand(1, m_lastFGCol);
+    }
+}
 
+void HobbytronicsSerialTFT::applyBackgroundColour()
+{
+    sendBackgroundColour(m_colBackground);
+}
+
+void HobbytronicsSerialTFT::applyLineColour()
+{
+    sendForegroundColour(m_colLine);
+}
+
+void HobbytronicsSerialTFT::applyFillColour()
+{
+    sendForegroundColour(m_colFill);
+}
 
