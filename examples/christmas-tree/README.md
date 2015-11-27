@@ -1,9 +1,9 @@
 # Christmas Tree demo
-This program is a demo for the HobbytronicsSerialTFT Arduino library.
+This program is a demo for the [HobbytronicsSerialTFT Arduino library][1].
 
-The library is available from here:
+You can see a video of this program in action here:
 
- * https://github.com/avidinsight/arduino-HobbytronicsSerialTFT
+ * http://www.youtube.com/watch?v=76kL5rqrEVo
  
 You will need the corresponding display from Hobbytronics, which is available from here:
 
@@ -29,6 +29,9 @@ Obviously you will also need to connect your Arduino to your computer to upload 
 ### Software
 Ensure you have installed the HobbytronicsSerialTFT library.
 
-Open the christmas-tree.ino file in the Arduino IDE (or your preferred IDE). Compile it, and upload it to your Arduino. The christmas tree and an animated "Merry Christmas" message should appear.
+Open the christmas-tree.ino file in the Arduino IDE (or your preferred IDE). Compile it, and upload it to your Arduino. It will take a few seconds to startup. The christmas tree should soon appear with the "Merry Christmas" text below it.
 
 If the display seems garbled, try resetting the Arduino.
+
+
+[1]: https://github.com/avidinsight/arduino-HobbytronicsSerialTFT
